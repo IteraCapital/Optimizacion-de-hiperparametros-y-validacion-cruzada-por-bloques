@@ -20,32 +20,30 @@ dataset = Create_dataset.create('2012-11-07', '2020-10-28')
 dataset = dataset.fillna(dataset.mean())
 print(dataset.shape)
 
+#archivo con las variables significativas incorporadas
 sel = Sd.ANOVA_importance(dataset,0.75,'Label')
 print(sel.head())
 
-#model = Models.createNN(13,8,1)
+model = Models.createNN(13,8,1)
 
 
-#model = Models.createNN(13,1,.3)
+model = Models.createNN(13,1,.3)
 
-#white_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv",
-#                         sep=';')
-#red_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv",
-#                       sep=';')
-#red_wine["type"] = 1
-#white_wine["type"] = 0
-#wines = [red_wine, white_wine]
-#wines = pd.concat(wines)
-#y = np.ravel(wines.type)
+white_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv",
+                         sep=';')
+red_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv",
+                       sep=';')
+red_wine["type"] = 1
+white_wine["type"] = 0
+wines = [red_wine, white_wine]
+wines = pd.concat(wines)
+y = np.ravel(wines.type)
 
-#x = wines.loc[:,wines.columns!="type"]
-#y = wines["type"]
-#x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)#
-
-
+x = wines.loc[:,wines.columns!="type"]
+y = wines["type"]
+x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)#
 
 
-'''
 parameter_bounds = {
                     'lr':(0.006,0.002),
                     'neuronPctg':(0,0.1)
@@ -76,4 +74,4 @@ model.add(Dense(8,activation='relu')) #hidden layer
 model.add(Dense(1,activation='sigmoid')) #output layer
 
 from OptimizationTools import learningRate_optimization
-[lr,cost]=learningRate_optimization(x_train,y_train,model,50,.75,.75,[7,20],1,10000,2)'''
+[lr,cost]=learningRate_optimization(x_train,y_train,model,50,.75,.75,[7,20],1,10000,2)
