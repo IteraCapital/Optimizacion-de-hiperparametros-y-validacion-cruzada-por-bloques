@@ -16,6 +16,17 @@ from keras.layers import Dense
 ##fully connected neural network
 pd.options.mode.use_inf_as_na = True
 
+import pandas as pd
+#from sklearn.feature_selection import VarianceThreshold
+#from sklearn.feature_selection import f_classif
+import Create_dataset
+
+pd.options.mode.use_inf_as_na = True
+
+dataset = Create_dataset.create('2012-11-07', '2020-10-28')
+dataset = dataset.fillna(dataset.mean())
+print(dataset.shape)
+
 dataset = Create_dataset.create('2012-11-07', '2020-10-28')
 dataset = dataset.fillna(dataset.mean())
 print(dataset.shape)
@@ -42,6 +53,10 @@ y = np.ravel(wines.type)
 x = wines.loc[:,wines.columns!="type"]
 y = wines["type"]
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)#
+
+#x = wines.loc[:,wines.columns!="type"]
+#y = wines["type"]
+#x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)#
 
 
 parameter_bounds = {
