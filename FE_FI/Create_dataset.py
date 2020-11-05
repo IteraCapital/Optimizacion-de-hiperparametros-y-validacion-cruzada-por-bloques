@@ -2,7 +2,7 @@
 """
 Created on Tue Oct 27 12:06:04 2020
 
-@author: Esteban
+@author: Esteban , Franck
 """
 import pandas as pd
 import numpy as np
@@ -10,7 +10,7 @@ import Data
 import Add_features
 import Math_transformations
 
-def download(f_inicio = '2016-01-01', f_fin = '2020-10-26'):
+def download(f_inicio = '2016-01-01', f_fin = '2020-10-26', freq = "M1"):
     # Download prices from Oanda into df_pe
     instrumento = "EUR_USD"
     
@@ -19,7 +19,7 @@ def download(f_inicio = '2016-01-01', f_fin = '2020-10-26'):
     
     token = '40a4858c00646a218d055374c2950239-f520f4a80719d9749cc020ddb5188887'
     
-    df_pe = Data.getPrices(p0_fini=f_inicio, p1_ffin=f_fin, p2_gran = "D",
+    df_pe = Data.getPrices(p0_fini=f_inicio, p1_ffin=f_fin, p2_gran = freq,
                            p3_inst = instrumento, p4_oatk = token, p5_ginc = 4900)
     df_pe = df_pe.set_index('TimeStamp') #set index to date
     
@@ -50,11 +50,11 @@ def add_all_features(df_pe):
     df_pe['quartiles'] = Add_features.quartiles(df_pe,10)
     return df_pe
 
-def create(inicio: str, fin: str):
+def create(inicio: str, fin: str, freq: str):
     '''
     inicio, fin are str dates in format 'yyyy-mm-dd'
     '''
-    df_pe = download(inicio, fin)
+    df_pe = download(inicio, fin, freq)
     df_pe = add_all_features(df_pe)
     #df_pe = df_pe.notnull().values.all()
     #df_pe = df_pe.fillna(0)
@@ -67,4 +67,4 @@ def create(inicio: str, fin: str):
     df_pe['Label'] = Add_features.next_day_ret(df_pe)[1]
     return df_pe
     
-dataset = create('2010-01-01', '2020-10-26')
+dataset = create('2020-10-20', '2020-10-26','M1')
