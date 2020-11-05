@@ -5,29 +5,6 @@ import keras
 from keras.callbacks import CSVLogger
 import Models
 
-optimizer ={
-    'neuron_pctg':(0.5,.1,0.2,0.3,0.4,0.5),
-    'lr':(0.0006,.0008,.001,.0012,0.0014,.0016,.0018,.002)
-
-}
-
-
-optimizer ={
-    'learning_rate': {
-                    'start':0,
-                   'stop':1,
-                    'step':1,
-                   'scale':1000,
-                   },
-    'neuron percentage': {
-                    'start':1,
-                    'end': 5,
-                    'step':1,
-                    'scale':10
-                            }
-}
-
-
 def learningRate_optimization(x_train,y_train,model,lr_searchSpace,step,scale,n_particles,c1,c2,iter):
 
     def trainProcess_min(loss_history):
@@ -174,7 +151,6 @@ def PSO(x_train,y_train,model,optimizer,n_particles,c1,c2,iter):
     return [x1_pg, fx_pg]
 
 def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
-
     def trainProcess_min(loss_history):
         min_list = []
         for col in loss_history.columns:
@@ -192,8 +168,9 @@ def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
     def createParamRanges(optimizer_dict, n_particles):
         range_dict = {}
         for i in optimizer_dict.keys():
-            range_dict[i] = list(random.randrange(start=optimizer_dict[i]["start"], stop=optimizer_dict[i]["end"], step=
-            optimizer_dict[i]["step"]) / optimizer_dict[i]["scale"] for j in range(0, n_particles))
+            range_dict[i] = list(
+                random.randrange(start=optimizer_dict[i]["start"], stop=optimizer_dict[i]["stop"], step=
+                optimizer_dict[i]["step"]) / optimizer_dict[i]["scale"] for j in range(0, n_particles))
 
         return range_dict
 
@@ -203,12 +180,12 @@ def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
             x1_pl[i] = x1p[position][i]
         return x1_pl
 
-    def paramspeed_update(x1p, velocidad, c1, x1_pg, c2, x1_pL):
+    def paramspeed_update(x1p, velocidad, c1, x_pg, c2, x1_pL):
         x1p_updated = {}
         for i in x1p.keys():
             if type(i) != int:
                 x1p[i] = x1p[i]
-                x1p_updated[i] = x1p_update(velocidad, c1, x1_pg, x1p[i], c2, x1_pL[i])
+                x1p_updated[i] = x1p_update(velocidad, c1, x_pg[i], x1p[i], c2, x1_pL[i])
             else:
                 continue
         return x1p_updated
@@ -225,8 +202,11 @@ def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
     x1pL = x1p
 
     velocidad_x1 = np.zeros(n_particles)
+    x_pg = set_keys(optimizer=param_dict)
     x1_pg = 0
     x2_pg = 0  # agregar mas x_pg en caso de mas parámetros
+    x3_pg = 0
+    # x4_pg=0
     fx_pg = 1
     fx_pL = np.ones(n_particles) * fx_pg
     history = pd.DataFrame()
@@ -234,10 +214,12 @@ def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
     for i in range(0, iter):
 
         for j in range(0, n_particles):
-            model = Models.createNN(lr=x1p["learning_rate"][j], neuron_pctg=x1p["neuron percentage"][j])
+            model = Models.createNN(lr=float(x1p["learning_rate"][j]), neuron_pctg=float(x1p["neuron percentage"][j])
+                                    ,layer_pctg=float(x1p["layer percentage"][j]))
             csv_logger = CSVLogger('log' + str(j) + '.csv', append=False,
                                    separator=';')
-            model.fit(x_train, y_train, epochs=10, batch_size=1, verbose=1, callbacks=[csv_logger])
+            model.fit(x_train, y_train, epochs=10, batch_size=int(x1p["batch size"][j]), verbose=1,
+                      callbacks=[csv_logger], shuffle=False)
             to_read = 'log' + str(j) + '.csv'
             fx = (pd.read_csv("C:/Users/anuno/OneDrive/Documents/ITESO/PAP 2/" + to_read,
                               sep=';', usecols=["loss"]))
@@ -248,24 +230,32 @@ def optimizeNN(param_dict,n_particles, iter,x_train,y_train):
             else:
 
                 history = pd.concat([history, fx], axis=1, sort=False)
-
         fx = pd.DataFrame(trainProcess_min(history))
         [val, idx] = fx.min(), fx.idxmin()[0]
 
         if val.values < float(fx_pg):  # extender en caso de mas parametros
             fx_pg = val
-            x1_pg = x1p["learning_rate"][idx]
-            x2_pg = x1p['neuron percentage'][idx]
+            for i in x_pg.keys():
+                for j in x1p.keys():
+                    if i == j:
+                        x_pg[i] = x1p[j][idx]
+            # x1_pg = x1p["learning_rate"][idx]
+            # x2_pg = x1p['neuron percentage'][idx]
+            # x3_pg = x1p['batch size'][idx]
+        # x4_pg = x1p['momentum'][idx]
 
         for k in range(0, n_particles):
             if fx[0][k] < fx_pL[k]:
                 fx_pL[k] = fx[0][k]
                 x1pL['learning_rate'][k] = x1p["learning_rate"][k]  # diccionario de parámetros
                 x1pL['neuron percentage'][k] = x1p["neuron percentage"][k]
-        x1p = paramspeed_update(x1p, velocidad_x1, c1, x1_pg, c2, x1pL)
-        parametros = [x1_pg, x2_pg]
+                x1pL['batch size'][k] = x1p['batch size'][k]
+                x1pL['layer percentage'][k]=x1p["layer percentage"][k]
+        x1p = paramspeed_update(x1p, velocidad_x1, c1, x_pg, c2, x1pL)
+        print(x1p)
+        parametros = x_pg
 
-    parametros_optimos = set_keys(optimizer)
+    parametros_optimos = set_keys(param_dict)
     parametros_optimos = dict(zip(parametros_optimos.keys(), parametros))
-    parametros_optimos["Funcion de costo"]= fx_pg.values
-    return [parametros_optimos,fx_pg]
+    parametros["Funcion de costo"] = fx_pg
+    return parametros

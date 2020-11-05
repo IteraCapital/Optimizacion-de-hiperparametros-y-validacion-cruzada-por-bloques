@@ -41,12 +41,13 @@ from sklearn import metrics
 #     return model
 
 
-def createNN(neuron_pctg,lr):
+def createNN(neuron_pctg,lr,layer_pctg):
     model = Sequential()
-    nneurons = neuron_pctg * 100  # maximum 1000 neurons
+    nneurons = float(neuron_pctg) * 100  # maximum 1000 neurons
+    nlayers = float(layer_pctg)*50
     layer_counter = 0
-    model.add(Dense(13,activation="sigmoid",input_shape=(12,)))  # input layer
-    while nneurons <= 10 and layer_counter < 10:  # hidden layer limited to
+    model.add(Dense(11,activation="sigmoid",input_shape=(10,)))  # input layer
+    while layer_counter < nlayers:  # hidden layer limited to
         model.add(Dense(nneurons, activation="sigmoid"))
         layer_counter += 1
     model.add(Dense(1,activation="sigmoid"))
@@ -57,8 +58,7 @@ def createNN(neuron_pctg,lr):
     return model
 
 
-def evaluateModel(lr,neuronPctg):
-    model = createNN(neuronPctg,lr)
+def evaluateModel(model,lr,neuronPctg,x_train,y_train):
     opt = keras.optimizers.Adam(learning_rate=lr)
     model.compile(loss='binary_crossentropy', optimizer=opt)
     model.fit(x_train,y_train,verbose=1,epochs=100)
