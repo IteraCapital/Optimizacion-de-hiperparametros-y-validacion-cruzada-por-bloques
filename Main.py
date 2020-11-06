@@ -1,57 +1,107 @@
-import pandas as pd
-from sklearn.feature_selection import VarianceThreshold
-from sklearn.feature_selection import f_classif
-import Create_dataset
-import Select_dataset as Sd
-from OptimizationTools import learningRate_optimization
-import Data
 import Models
-from sklearn.model_selection import train_test_split
+import OptimizationTools
+#import Select_dataset
 import numpy as np
-from bayes_opt import BayesianOptimization
-from keras.wrappers.scikit_learn import  KerasClassifier
-from sklearn.model_selection import GridSearchCV
-from keras.models import Sequential
-from keras.layers import Dense
-##fully connected neural network
-pd.options.mode.use_inf_as_na = True
+from sklearn.model_selection import train_test_split
+import pandas as pd
+
+# df = Select_dataset.dataset
+# filtered_dataset= Select_dataset.ANOVA_importance(df,0.79,'Label')
+# filtered_dataset = Select_dataset.dateToStr(filtered_dataset)
+# y= filtered_dataset[["Label"]]
+# x = filtered_dataset.loc[:,filtered_dataset.columns!='Label']
+# # x = x.loc[:,x.columns!='exp_CCI']
+# # x = x.loc[:,x.columns!='exp2_CCI']
+# x_train = x.loc[(x.index>'2017-01-20')&(x.index<'2020-03-20')].reset_index(drop=True)
+# y_train = y.loc[(y.index>'2017-01-20')&(y.index<'2020-03-20')].reset_index(drop=True)
+#
+# x_test = x.loc[(x.index>'2020-03-21')&(x.index<'2020-06-21')].reset_index(drop=True)
+# y_test = y.loc[(y.index>'2020-03-21')&(y.index<'2020-06-21')].reset_index(drop=True)
+#
+# def normalize(column):
+#     mean = np.mean(column)
+#     std = np.std(column)
+#     column = list((i-mean)/std for i in column)
+#     return column
+#
+# for i in x_train.columns:
+#     x_train[i]=normalize(x_train[i])
+#     x_test[i]=normalize(x_test[i])
+
+
+param_dict ={
+    'learning_rate': {
+                    'start':1,
+                   'stop':10,
+                    'step':1,
+                   'scale':10000,
+                   },
+    'neuron percentage': { ##capas ocultas
+                    'start':1,
+                    'stop': 10,
+                    'step':1,
+                    'scale':10
+                            },
+    'layer percentage':{
+                    'start':1,
+                    'stop':60,
+                    'step':1,
+                    'scale':10
+                        },
+    'batch size':{
+                'start':1,
+                'stop':100,
+                'step':10,
+                'scale':1
+                        }
+}
+
+n_particles = 30
+iter = 3
+
+
 
 import pandas as pd
 #from sklearn.feature_selection import VarianceThreshold
 #from sklearn.feature_selection import f_classif
 import Create_dataset
-
 pd.options.mode.use_inf_as_na = True
 
 dataset = Create_dataset.create('2012-11-07', '2020-10-28')
 dataset = dataset.fillna(dataset.mean())
-print(dataset.shape)
-
-dataset = Create_dataset.create('2012-11-07', '2020-10-28')
-dataset = dataset.fillna(dataset.mean())
-print(dataset.shape)
-
-#archivo con las variables significativas incorporadas
-sel = Sd.ANOVA_importance(dataset,0.75,'Label')
-print(sel.head())
-
-model = Models.createNN(13,8,1)
+#print(dataset.shape)
 
 
-model = Models.createNN(13,1,.3)
 
-white_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-white.csv",
-                         sep=';')
-red_wine = pd.read_csv("http://archive.ics.uci.edu/ml/machine-learning-databases/wine-quality/winequality-red.csv",
-                       sep=';')
+
+
+
+#
+# model = OptimizationTools.optimizeNN(param_dict,50,10,x_train,y_train)
+# nmodel = Models.createNN(model["neuron percentage"],model["learning_rate"])#
+# #
+#
+#
+#
+#
+#
+
+
+path = 'C:/Users/anuno/OneDrive/Documents/ITESO/PAP 2/'
+red_wine = pd.read_csv(path+'winequality-red.csv',sep=',')
+white_wine=pd.read_excel(path+'white_wine.xlsx')
+
 red_wine["type"] = 1
 white_wine["type"] = 0
 wines = [red_wine, white_wine]
-wines = pd.concat(wines)
+wines = pd.concat(wines,sort=False)
 y = np.ravel(wines.type)
 
 x = wines.loc[:,wines.columns!="type"]
 y = wines["type"]
+<<<<<<< HEAD
+x_train, x_test, y_train, y_test_ = train_test_split(x, y, test_size=0.33)
+=======
 x_train, x_test, y_train, y_test = train_test_split(x, y, test_size=0.33)#
 
 #x = wines.loc[:,wines.columns!="type"]
@@ -69,24 +119,7 @@ optimizer ={
     'lr':(0.0006,.0008,.001,.0012,0.0014,.0016,.0018,.002)
 
 }
+>>>>>>> 31dd3a2643eb457cdeb89d8f7c89c7a403954f82
 
 
-optimizer.maximize(init_points=10,n_iter=5)
-val = Models.evaluateModel(.0001,.10)
-model = KerasClassifier(build_fn=Models.createNN,lr=.001,neuron_pctg=.1,epochs=10)
-grid = GridSearchCV(estimator=model,param_grid=optimizer,n_jobs=-1)
-grid_result = grid.fit(x_train,y_train)
-print("Best: %f using %s" % (grid_result.best_score_, grid_result.best_params_))
-means = grid_result.cv_results_['mean_test_score']
-stds = grid_result.cv_results_['std_test_score']
-params = grid_result.cv_results_['params']
-for mean, stdev, param in zip(means, stds, params):
-    print("%f (%f) with: %r" % (mean, stdev, param))
-
-model= Sequential() #initialize network
-model.add(Dense(13,activation='relu',input_shape=(12,))) #first layer, inputs
-model.add(Dense(8,activation='relu')) #hidden layer
-model.add(Dense(1,activation='sigmoid')) #output layer
-
-from OptimizationTools import learningRate_optimization
-[lr,cost]=learningRate_optimization(x_train,y_train,model,50,.75,.75,[7,20],1,10000,2)
+param = OptimizationTools.optimizeNN(param_dict,30,3,x_train,y_train)
