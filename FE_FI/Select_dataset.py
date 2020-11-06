@@ -8,9 +8,10 @@ import pandas as pd
 from sklearn.feature_selection import VarianceThreshold
 from sklearn.feature_selection import f_classif
 import Create_dataset
+import matplotlib.pyplot as plt
 pd.options.mode.use_inf_as_na = True
 
-dataset = Create_dataset.create('2012-11-07', '2020-10-28')
+dataset = Create_dataset.create('2020-10-20', '2020-10-29','M1')
 dataset = dataset.fillna(dataset.mean())
 print(dataset.shape)
 #long = int(round(len(df) * 0.80))
@@ -72,9 +73,9 @@ def ANOVA_importance(df,
 
 df = ANOVA_importance(dataset,0.79,'Label')
 
-print(df.head())
-print(df.columns)
-print(df.shape)
+#print(df.head())
+#print(df.columns)
+#print(df.shape)
 
 #df.to_csv("../Feature_Creation/FEFI_1220.csv")
 
